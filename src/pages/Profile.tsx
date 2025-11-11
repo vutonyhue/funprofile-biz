@@ -8,6 +8,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { EditProfile } from '@/components/profile/EditProfile';
 import { PostCard } from '@/components/feed/PostCard';
+import { FriendRequestButton } from '@/components/friends/FriendRequestButton';
+import { FriendsList } from '@/components/friends/FriendsList';
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -137,6 +139,11 @@ const Profile = () => {
               </Avatar>
               <CardTitle className="text-xl sm:text-2xl">{profile?.username}</CardTitle>
               <p className="text-sm sm:text-base text-muted-foreground">{profile?.full_name || 'Chưa đặt tên'}</p>
+              {!isOwnProfile && currentUserId && (
+                <div className="mt-4">
+                  <FriendRequestButton userId={profile.id} currentUserId={currentUserId} />
+                </div>
+              )}
             </CardHeader>
             <CardContent className="px-4 sm:px-6">
               <p className="text-center text-sm sm:text-base break-words">{profile?.bio || 'Chưa có tiểu sử'}</p>
@@ -145,8 +152,9 @@ const Profile = () => {
         </div>
 
         <Tabs defaultValue="posts" className="w-full">
-          <TabsList className={`grid w-full ${isOwnProfile ? 'grid-cols-2' : 'grid-cols-1'} h-auto`}>
+          <TabsList className={`grid w-full ${isOwnProfile ? 'grid-cols-3' : 'grid-cols-1'} h-auto`}>
             <TabsTrigger value="posts" className="text-xs sm:text-sm py-2">{isOwnProfile ? 'My Posts' : 'Posts'}</TabsTrigger>
+            {isOwnProfile && <TabsTrigger value="friends" className="text-xs sm:text-sm py-2">Friends</TabsTrigger>}
             {isOwnProfile && <TabsTrigger value="edit" className="text-xs sm:text-sm py-2">Edit Profile</TabsTrigger>}
           </TabsList>
           <TabsContent value="posts" className="space-y-4 mt-6">
@@ -168,9 +176,14 @@ const Profile = () => {
             )}
           </TabsContent>
           {isOwnProfile && (
-            <TabsContent value="edit" className="mt-6">
-              <EditProfile />
-            </TabsContent>
+            <>
+              <TabsContent value="friends" className="mt-6">
+                <FriendsList userId={currentUserId} />
+              </TabsContent>
+              <TabsContent value="edit" className="mt-6">
+                <EditProfile />
+              </TabsContent>
+            </>
           )}
         </Tabs>
       </main>
