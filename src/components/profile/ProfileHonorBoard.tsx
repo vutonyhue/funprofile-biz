@@ -1,8 +1,8 @@
-// src/components/profile/ProfileHonorBoard.tsx
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
+import { ArrowUp, MessageCircle, Star, Users, BadgeDollarSign } from 'lucide-react';
 
 interface UserStats {
   posts_count: number;
@@ -16,15 +16,9 @@ interface ProfileHonorBoardProps {
   userId: string;
   username: string;
   avatarUrl?: string;
-  isDemo?: boolean;
 }
 
-export const ProfileHonorBoard = ({ 
-  userId, 
-  username,
-  avatarUrl,
-  isDemo = false 
-}: ProfileHonorBoardProps) => {
+export const ProfileHonorBoard = ({ userId, username, avatarUrl }: ProfileHonorBoardProps) => {
   const [stats, setStats] = useState<UserStats>({
     posts_count: 0,
     comments_count: 0,
@@ -35,129 +29,136 @@ export const ProfileHonorBoard = ({
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (isDemo) {
-      setTimeout(() => {
-        setStats({
-          posts_count: 1000,
-          comments_count: 2000,
-          reactions_count: 5000,
-          friends_count: 5000,
-          total_reward: 9999999,
-        });
-        setLoading(false);
-      }, 800);
-      return;
-    }
-
     fetchUserStats();
-  }, [userId, isDemo]);
+  }, [userId]);
 
   const fetchUserStats = async () => {
     try {
-      const [
-        { count: postsCount },
-        { count: commentsCount },
-        { count: reactionsCount },
-        { count: friendsCount },
-      ] = await Promise.all([
-        supabase.from('posts').select('*', { count: 'exact', head: true }).eq('user_id', userId),
-        supabase.from('comments').select('*', { count: 'exact', head: true }).eq('user_id', userId),
-        supabase.from('reactions').select('*', { count: 'exact', head: true }).eq('user_id', userId),
-        supabase.from('friendships').select('*', { count: 'exact', head: true })
-          .or(`user_id.eq.${userId},friend_id.eq.${userId}`)
-          .eq('status', 'accepted'),
-      ]);
+      // Fetch posts count
+      const { count: postsCount } = await supabase
+        .from('posts')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', userId);
+
+      // Fetch comments count
+      const { count: commentsCount } = await supabase
+        .from('comments')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', userId);
+
+      // Fetch reactions count (reactions this user made)
+      const { count: reactionsCount } = await supabase
+        .from('reactions')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', userId);
+
+      // Fetch friends count (accepted friendships)
+      const { count: friendsCount } = await supabase
+        .from('friendships')
+        .select('*', { count: 'exact', head: true })
+        .or(`user_id.eq.${userId},friend_id.eq.${userId}`)
+        .eq('status', 'accepted');
 
       setStats({
         posts_count: postsCount || 0,
         comments_count: commentsCount || 0,
         reactions_count: reactionsCount || 0,
         friends_count: friendsCount || 0,
-        total_reward: 9999999, // Sẽ thay bằng công thức thật sau
+        total_reward: 9999999, // Placeholder for future implementation
       });
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error fetching user stats:', error);
     } finally {
       setLoading(false);
     }
   };
 
   if (loading) {
-    return <Skeleton className="h-[720px] w-80 rounded-3xl" />;
+    return <Skeleton className="h-[600px] w-full" />;
   }
 
-  return (
-    <div className="fixed right-4 top-20 z-50 hidden lg:block">
-      <div className="relative w-80 h-[720px] rounded-3xl overflow-hidden shadow-2xl">
-        
-        {/* ẢNH NỀN – DÙNG ẢNH 2 CỦA CON */}
-        <img 
-          src="/honor-board-bg.jpg" 
-          alt="Honor Board Background" 
-          className="w-full h-full object-cover"
-        />
+  const StatRow = ({ icon, label, value }: { icon: React.ReactNode; label: string; value: number }) => (
+    <div className="relative border-2 border-yellow-500 rounded-xl p-4 bg-gradient-to-r from-green-800/50 to-green-700/50 backdrop-blur-sm">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="text-yellow-400">
+            {icon}
+          </div>
+          <span className="text-yellow-400 font-bold text-lg uppercase tracking-wide">{label}</span>
+        </div>
+        <span className="text-white font-bold text-2xl">{value.toLocaleString()}</span>
+      </div>
+    </div>
+  );
 
-        {/* CHỒNG SỐ + AVATAR + TÊN USER */}
-        <div className="absolute inset-0 pointer-events-none">
+return (
+    <div className="sticky top-20 rounded-3xl overflow-hidden border-4 border-yellow-500 bg-gradient-to-br from-green-600 via-green-700 to-green-800 shadow-2xl">
+      {/* Sparkle effects */}
+      <div className="absolute inset-0 opacity-30 pointer-events-none">
+        <div className="absolute top-4 left-4 w-2 h-2 bg-white rounded-full animate-pulse"></div>
+        <div className="absolute top-8 right-8 w-1 h-1 bg-white rounded-full animate-pulse" style={{ animationDelay: '0.5s' }}></div>
+        <div className="absolute bottom-12 left-12 w-1.5 h-1.5 bg-white rounded-full animate-pulse" style={{ animationDelay: '1s' }}></div>
+        <div className="absolute bottom-8 right-16 w-2 h-2 bg-white rounded-full animate-pulse" style={{ animationDelay: '1.5s' }}></div>
+        <div className="absolute top-1/2 left-8 w-1 h-1 bg-white rounded-full animate-pulse" style={{ animationDelay: '2s' }}></div>
+        <div className="absolute top-1/3 right-12 w-1.5 h-1.5 bg-white rounded-full animate-pulse" style={{ animationDelay: '2.5s' }}></div>
+      </div>
 
-          {/* AVATAR – VỊ TRÍ CHUẨN THEO ẢNH */}
-          <div className="absolute top-[90px] right-[30px]">
-            <div className="w-16 h-16 rounded-full overflow-hidden border-4 border-yellow-400 shadow-xl">
-              <Avatar className="w-full h-full">
-                <AvatarImage src={isDemo ? "/lovable-avatar.jpg" : avatarUrl} />
-                <AvatarFallback className="bg-yellow-500 text-black font-bold text-lg">
-                  {username?.[0]?.toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
+      <div className="relative p-6 space-y-4">
+        {/* Header with logo */}
+        <div className="text-center space-y-2">
+          <div className="inline-block">
+            <div className="relative">
+              <img 
+                src="/fun-profile-logo.jpg" 
+                alt="Fun Profile Web3"
+                className="w-20 h-20 mx-auto rounded-full border-2 border-yellow-400 shadow-lg"
+              />
             </div>
           </div>
-
-          {/* TÊN USER – VỊ TRÍ CHUẨN */}
-          <div className="absolute top-[85px] left-[40px] right-[100px] text-left">
-            <h2 className="text-2xl font-black text-yellow-400 tracking-widest drop-shadow-lg">
-              {username.toUpperCase()}
-            </h2>
+          
+          {/* User info */}
+          <div className="flex items-center justify-center gap-3">
+            <h2 className="text-white text-xl font-bold tracking-wide">{username.toUpperCase()}</h2>
+            <Avatar className="w-12 h-12 border-3 border-yellow-400">
+              <AvatarImage src={avatarUrl} />
+              <AvatarFallback className="bg-yellow-500 text-black font-bold">
+                {username?.[0]?.toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
           </div>
+          
+          <h1 className="text-yellow-400 text-3xl font-black tracking-wider drop-shadow-lg">
+            HONOR BOARD
+          </h1>
+        </div>
 
-          {/* SỐ LIỆU – CHỒNG LÊN VỊ TRÍ TRỐNG TRONG ẢNH 2 */}
-          <div className="absolute top-[230px] left-0 right-0 space-y-16 px-8">
-
-            {/* POSTS */}
-            <div className="text-right pr-8">
-              <span className="text-4xl font-black text-white drop-shadow-2xl">
-                {stats.posts_count.toLocaleString()}
-              </span>
-            </div>
-
-            {/* COMMENTS */}
-            <div className="text-right pr-8">
-              <span className="text-4xl font-black text-white drop-shadow-2xl">
-                {stats.comments_count.toLocaleString()}
-              </span>
-            </div>
-
-            {/* REACTIONS */}
-            <div className="text-right pr-8">
-              <span className="text-4xl font-black text-white drop-shadow-2xl">
-                {stats.reactions_count.toLocaleString()}
-              </span>
-            </div>
-
-            {/* FRIENDS */}
-            <div className="text-right pr-8">
-              <span className="text-4xl font-black text-white drop-shadow-2xl">
-                {stats.friends_count.toLocaleString()}
-              </span>
-            </div>
-
-            {/* TOTAL REWARD – SIÊU TO, CĂN GIỮA */}
-            <div className="text-center mt-8">
-              <span className="text-5xl font-black bg-gradient-to-r from-rose-500 via-red-500 to-amber-500 bg-clip-text text-transparent drop-shadow-2xl animate-pulse">
-                {stats.total_reward.toLocaleString()}
-              </span>
-            </div>
-
-          </div>
+        {/* Stats */}
+        <div className="space-y-3">
+          <StatRow 
+            icon={<ArrowUp className="w-6 h-6" />}
+            label="POSTS"
+            value={stats.posts_count}
+          />
+          <StatRow 
+            icon={<MessageCircle className="w-6 h-6" />}
+            label="COMMENTS"
+            value={stats.comments_count}
+          />
+          <StatRow 
+            icon={<Star className="w-6 h-6" />}
+            label="REACTIONS"
+            value={stats.reactions_count}
+          />
+          <StatRow 
+            icon={<Users className="w-6 h-6" />}
+            label="FRIENDS"
+            value={stats.friends_count}
+          />
+          <StatRow 
+            icon={<BadgeDollarSign className="w-6 h-6" />}
+            label="TOTAL REWARD"
+            value={stats.total_reward}
+          />
         </div>
       </div>
     </div>
